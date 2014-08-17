@@ -15,7 +15,7 @@ namespace SignCommands
     {
         public override string Name
         {
-            get { return "Sign Command"; }
+            get { return "SignCMD"; }
         }
 
         public override string Author
@@ -30,9 +30,10 @@ namespace SignCommands
 
         public override Version Version
         {
-            get { return new Version(1, 6, 0); }
+            get { return new Version(2, 0, 0); }
         }
 
+        #region Read
         public static ScConfig config = new ScConfig();
         private static readonly ScPlayer[] ScPlayers = new ScPlayer[256];
         
@@ -50,7 +51,9 @@ namespace SignCommands
         {
             UsingInfiniteSigns = File.Exists(Path.Combine("ServerPlugins", "InfiniteSigns.dll"));
         }
+        #endregion
 
+        #region Init&Dispose
         public override void Initialize()
         {
             ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
@@ -86,7 +89,7 @@ namespace SignCommands
 
             _updateTimer.Elapsed += UpdateTimerOnElapsed;
         }
-
+        #endregion
 
         #region Commands
 
@@ -380,21 +383,5 @@ namespace SignCommands
         }
 
         #endregion
-    }
-
-    public class Cooldown
-    {
-        public int time;
-        public ScSign sign;
-        public string name;
-        public string group;
-
-        public Cooldown(int time, ScSign sign, string name, string group = null)
-        {
-            this.time = time;
-            this.sign = sign;
-            this.name = name;
-            this.group = group;
-        }
     }
 }

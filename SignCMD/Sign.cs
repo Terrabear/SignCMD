@@ -33,81 +33,6 @@ namespace SignCommands
             RegisterCommands(text, registrar);
         }
 
-        #region ParseCommands
-
-        private IEnumerable<List<string>> ParseCommands(string text)
-        {
-            //Remove the Sign Command definer. It's not required
-            text = text.Remove(0, SignCommands.config.DefineSignCommands.Length);
-            
-            //Replace the Sign Command command starter with the TShock one so that it gets handled properly later
-            text = text.Replace(SignCommands.config.CommandsStartWith, TShock.Config.CommandSpecifier);
-
-            //Remove whitespace
-            text = text.Trim();
-
-            //Create a local variable for our return value
-            var ret = new List<List<string>>();
-
-            //Split the text string at any TShock command character
-            var cmdStrings = text.Split(Convert.ToChar(TShock.Config.CommandSpecifier));
-
-            //Iterate through the strings
-            foreach (var str in cmdStrings)
-            {
-                var sbList = new List<string>();
-                var sb = new StringBuilder();
-                var instr = false;
-                for (var i = 0; i < str.Length; i++)
-                {
-                    var c = str[i];
-
-                    if (c == '\\' && ++i < str.Length)
-                    {
-                        if (str[i] != '"' && str[i] != ' ' && str[i] != '\\')
-                            sb.Append('\\');
-                        sb.Append(str[i]);
-                    }
-                    else if (c == '"')
-                    {
-                        instr = !instr;
-                        if (!instr)
-                        {
-                            sbList.Add(sb.ToString());
-                            sb.Clear();
-                        }
-                        else if (sb.Length > 0)
-                        {
-                            sbList.Add(sb.ToString());
-                            sb.Clear();
-                        }
-                    }
-                    else if (IsWhiteSpace(c) && !instr)
-                    {
-                        if (sb.Length > 0)
-                        {
-                            sbList.Add(sb.ToString());
-                            sb.Clear();
-                        }
-                    }
-                    else
-                        sb.Append(c);
-                }
-                if (sb.Length > 0)
-                    sbList.Add(sb.ToString());
-
-                ret.Add(sbList);
-            }
-            return ret;
-        }
-
-        private static bool IsWhiteSpace(char c)
-        {
-            return c == ' ' || c == '\t' || c == '\n';
-        }
-
-        #endregion
-
         #region RegisterCommands
 
         private void RegisterCommands(string text, TSPlayer ply)
@@ -278,7 +203,7 @@ namespace SignCommands
                     }
                     return;
                 }
-                SpawnBosses(_bosses, sPly);
+                SpawnBoss(_bosses, sPly);
             }
 
             foreach (var cmdPair in commands)
@@ -309,6 +234,7 @@ namespace SignCommands
 
         #endregion
         
+        #region CheckPerm
         private bool CheckPermissions(TSPlayer player)
         {
             return commands.Values.All(command => command.CanRun(player));
@@ -320,7 +246,84 @@ namespace SignCommands
                 return true;
             return false;
         }
+        #endregion
 
+        #region ParseCMD
+
+        private IEnumerable<List<string>> ParseCommands(string text)
+        {
+            //Remove the Sign Command definer. It's not required
+            text = text.Remove(0, SignCommands.config.DefineSignCommands.Length);
+
+            //Replace the Sign Command command starter with the TShock one so that it gets handled properly later
+            text = text.Replace(SignCommands.config.CommandsStartWith, TShock.Config.CommandSpecifier);
+
+            //Remove whitespace
+            text = text.Trim();
+
+            //Create a local variable for our return value
+            var ret = new List<List<string>>();
+
+            //Split the text string at any TShock command character
+            var cmdStrings = text.Split(Convert.ToChar(TShock.Config.CommandSpecifier));
+
+            //Iterate through the strings
+            foreach (var str in cmdStrings)
+            {
+                var sbList = new List<string>();
+                var sb = new StringBuilder();
+                var instr = false;
+                for (var i = 0; i < str.Length; i++)
+                {
+                    var c = str[i];
+
+                    if (c == '\\' && ++i < str.Length)
+                    {
+                        if (str[i] != '"' && str[i] != ' ' && str[i] != '\\')
+                            sb.Append('\\');
+                        sb.Append(str[i]);
+                    }
+                    else if (c == '"')
+                    {
+                        instr = !instr;
+                        if (!instr)
+                        {
+                            sbList.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                        else if (sb.Length > 0)
+                        {
+                            sbList.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                    }
+                    else if (IsWhiteSpace(c) && !instr)
+                    {
+                        if (sb.Length > 0)
+                        {
+                            sbList.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                    }
+                    else
+                        sb.Append(c);
+                }
+                if (sb.Length > 0)
+                    sbList.Add(sb.ToString());
+
+                ret.Add(sbList);
+            }
+            return ret;
+        }
+
+        private static bool IsWhiteSpace(char c)
+        {
+            return c == ' ' || c == '\t' || c == '\n';
+        }
+
+        #endregion
+
+        #region ParseSpawn
         private void ParseSpawnMob(IEnumerable<string> args, TSPlayer player)
         {
             //>sm "blue slime":10 zombie:100
@@ -369,7 +372,9 @@ namespace SignCommands
                 }
             }
         }
+        #endregion
 
+        #region ParseSign
         private void ParseSignCd(IList<string> args)
         {
             int cd;
@@ -403,7 +408,9 @@ namespace SignCommands
                 }
             }
         }
+        #endregion
 
+        #region ParseU&G
         private void ParseGroups(IEnumerable<string> args)
         {
             var groups = new List<string>(args);
@@ -423,7 +430,9 @@ namespace SignCommands
             foreach (var user in users)
                 _users.Add(user);
         }
+        #endregion
 
+        #region SpawnMob
         private void SpawnMobs(Dictionary<string, int> mobs, ScPlayer sPly)
         {
             var mobList = new List<string>();
@@ -461,8 +470,10 @@ namespace SignCommands
                              TShock.Config.CommandSpecifier,
                              "/spawnmob " + string.Join(", ", mobList)), Color.PaleVioletRed, sPly.TsPlayer);*/
         }
+        #endregion
 
-        private void SpawnBosses(Dictionary<string, int> bosses, ScPlayer sPly)
+        #region SpawnBoss
+        private void SpawnBoss(Dictionary<string, int> bosses, ScPlayer sPly)
         {
             int a = 50;
             int b = 20;
@@ -582,3 +593,4 @@ namespace SignCommands
         }
     }
 }
+        #endregion

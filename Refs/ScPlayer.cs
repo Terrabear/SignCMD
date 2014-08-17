@@ -2,7 +2,7 @@
 
 namespace SignCommands
 {
-	public class ScPlayer
+	/*public class ScPlayer
 	{
 		public int Index { get; set; }
 		public TSPlayer TsPlayer { get { return TShock.Players[Index]; } }
@@ -20,5 +20,5 @@ namespace SignCommands
 			AlertPermissionCooldown = 0;
 			AlertCooldownCooldown = 0;
 		}
-	}
+	}*/
 }

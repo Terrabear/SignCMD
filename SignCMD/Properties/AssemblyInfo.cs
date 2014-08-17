@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SignCommands")]
+[assembly: AssemblyTitle("SignCMD")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Scavenger")]
-[assembly: AssemblyProduct("SignCommands")]
+[assembly: AssemblyProduct("SignCMD")]
 [assembly: AssemblyCopyright("Copyright \u00A9 Scavenger 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -3,7 +3,7 @@ using TShockAPI;
 
 namespace SignCommands
 {
-    public class SignCommand : Command
+    /*public class SignCommand : Command
     {
         private int _cooldown;
         public SignCommand(int coolDown, List<string> permissions, CommandDelegate cmd, params string[] names)
@@ -11,7 +11,7 @@ namespace SignCommands
         {
             _cooldown = coolDown;
         }
-    }
+    }*/
 
 
     //public class ScCommand
