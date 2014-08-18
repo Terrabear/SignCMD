@@ -5,7 +5,7 @@ using System.Text;
 using Terraria;
 using TShockAPI;
 
-namespace SignCommands
+namespace SignCMD
 {
     public class ScSign
     {
@@ -47,7 +47,7 @@ namespace SignCommands
 
                 var cmdName = args[0];
 
-                if (cmdName == "no-perm")
+                /*if (cmdName == "no-perm")
                 {
                     freeAccess = true;
                     continue;
@@ -106,7 +106,54 @@ namespace SignCommands
                 {
                     ParseSpawnBoss(args, ply);
                     continue;
-                }
+                }*/
+
+                switch (cmdName)
+				{
+					case "no-perm":
+					    freeAccess = true;
+						continue;
+
+					case "confirm":
+						_confirm = true;
+						continue;
+
+					case "no-read":
+						noRead = true;
+						continue;
+
+					case "no-edit":
+						noEdit = true;
+						continue;
+
+					case "require-perm":
+					case "rperm":
+						requiredPermission = args[1];
+						continue;
+
+					case "cd":
+					case "cooldown":
+						ParseSignCd(args);
+						continue;
+
+					case "allowg":
+						ParseGroups(args);
+						continue;
+
+					case "allowu":
+						ParseUsers(args);
+						continue;
+
+					case "spawnmob":
+					case "sm":
+						ParseSpawnMob(args, ply);
+						continue;
+
+					case "spawnboss":
+					case "sb":
+						ParseSpawnBoss(args, ply);
+						continue;
+				}
 
                 IEnumerable<Command> cmds = Commands.ChatCommands.Where(c => c.HasAlias(cmdName)).ToList();
 
@@ -128,9 +175,10 @@ namespace SignCommands
         public void ExecuteCommands(ScPlayer sPly)
         {
             var hasPerm = CheckPermissions(sPly.TsPlayer);
-            var overridePerm = CheckPermissionOverride(sPly.TsPlayer);
+            if (!hasPerm) return;
+            /*var overridePerm = CheckPermissionOverride(sPly.TsPlayer);
 
-            /*if (!freeAccess && !hasPerm && !overridePerm)
+            if (!freeAccess && !hasPerm && !overridePerm)
             {
                 if (sPly.AlertPermissionCooldown == 0)
                 {
@@ -143,11 +191,22 @@ namespace SignCommands
             if (cooldown > 0)
             {
                 if (sPly.AlertCooldownCooldown == 0)
+                {
+                    sPly.TsPlayer.SendErrorMessage("This sign is still cooling down. Please wait {0} more second{1}",
+                        cooldown, cooldown.Suffix());
+                    sPly.AlertCooldownCooldown = 3;
+                }
+                return;
+            }
+
+            /*if (cooldown > 0)
+            {
+                if (sPly.AlertCooldownCooldown == 0)
                     sPly.TsPlayer.SendErrorMessage("This sign is still cooling down. Please wait {0} more second{1}",
                         cooldown, cooldown.Suffix());
 
                 return;
-            }
+            }*/
 
             if (_confirm && sPly.confirmSign != this)
             {
@@ -157,7 +216,7 @@ namespace SignCommands
                 return;
             }
 
-            if (_groups.Count > 0 && !_groups.Contains(sPly.TsPlayer.Group.Name) && !overridePerm)
+            if (_groups.Count > 0 && !_groups.Contains(sPly.TsPlayer.Group.Name))
             {
                 if (sPly.AlertPermissionCooldown == 0)
                 {
@@ -167,7 +226,7 @@ namespace SignCommands
                 return;
             }
 
-            if (_users.Count > 0 && !_users.Contains(sPly.TsPlayer.UserAccountName) && !overridePerm)
+            if (_users.Count > 0 && !_users.Contains(sPly.TsPlayer.UserAccountName))
             {
                 if (sPly.AlertPermissionCooldown == 0)
                 {
@@ -178,8 +237,8 @@ namespace SignCommands
             }
 
             if (_mobs.Count > 0)
-            {
-                if (!sPly.TsPlayer.Group.HasPermission(Permissions.spawnmob) && !overridePerm)
+            /*{
+                if (!sPly.TsPlayer.Group.HasPermission(Permissions.spawnmob))
                 {
                     if (sPly.AlertPermissionCooldown == 0)
                     {
@@ -187,14 +246,14 @@ namespace SignCommands
                         sPly.AlertPermissionCooldown = 5;
                     }
                     return;
-                }
+                }*/
 
                 SpawnMobs(_mobs, sPly);
-            }
+            //}
 
             if (_bosses.Count > 0)
-            {
-                if (!sPly.TsPlayer.Group.HasPermission(Permissions.spawnboss) && !overridePerm)
+            /*{
+                if (!sPly.TsPlayer.Group.HasPermission(Permissions.spawnboss))
                 {
                     if (sPly.AlertPermissionCooldown == 0)
                     {
@@ -202,19 +261,24 @@ namespace SignCommands
                         sPly.AlertPermissionCooldown = 5;
                     }
                     return;
-                }
+                }*/
                 SpawnBoss(_bosses, sPly);
-            }
+            //}
 
             foreach (var cmdPair in commands)
             {
-                var args = new List<string>(cmdPair.Key);
+                //var args = new List<string>(cmdPair.Key);
                 var cmd = cmdPair.Value;
-                var cmdText = string.Join(" ", args);
+                var cmdText = string.Join(" ", cmdPair.Key);
                 cmdText = cmdText.Replace("{player}", sPly.TsPlayer.Name);
+                //Create args straight from the command text, meaning no need to iterate through args to replace {player}
+				var args = cmdText.Split(' ').ToList();
 
-                if (args.Any(s => s.Contains("{player}")))
-                    args[args.IndexOf("{player}")] = sPly.TsPlayer.Name;
+                //if (args.Any(s => s.Contains("{player}")))
+                //    args[args.IndexOf("{player}")] = sPly.TsPlayer.Name;
+
+                //while (args.Any(s => s.Contains("{player}")))
+				//	args[args.IndexOf("{player}")] = sPly.TsPlayer.Name;
 
                 if (cmd.DoLog)
                     TShock.Utils.SendLogs(
@@ -235,16 +299,58 @@ namespace SignCommands
         #endregion
         
         #region CheckPerm
-        private bool CheckPermissions(TSPlayer player)
+
+        /*private bool CheckPermissions(TSPlayer player)
         {
             return commands.Values.All(command => command.CanRun(player));
-        }
+        }*/
 
-        private bool CheckPermissionOverride(TSPlayer player)
+        //private bool CheckPermissionOverride(TSPlayer player)
+		
+        public bool CheckPermissions(TSPlayer player)
         {
-            if (player.Group.HasPermission(requiredPermission))
-                return true;
-            return false;
+            if (player == null) return false;
+
+			var sPly = SignCommands.ScPlayers[player.Index];
+			if (sPly == null)
+			{ 
+				Log.ConsoleError("An error occured while executing a sign command."
+					+ "TSPlayer {0} at index {1} does not exist as an ScPlayer",
+					player.Name, player.Index);
+				player.SendErrorMessage("An error occured. Please try again");
+				return false;
+			}
+
+			if (freeAccess) return true;
+
+			if (!string.IsNullOrEmpty(requiredPermission))
+				if (player.Group.HasPermission(requiredPermission))
+					return true;
+				else
+				{
+					if (sPly.AlertPermissionCooldown == 0)
+					{
+					    player.SendErrorMessage("You do not have the required permission to use this sign.");
+						sPly.AlertPermissionCooldown = 3;
+					}
+					return false;
+				}
+
+			if (commands.Values.All(command => command.CanRun(player)))
+				return true;
+			else
+			{
+				if (sPly.AlertPermissionCooldown == 0)
+				{
+				    player.SendErrorMessage("You do not have access to the commands on this sign.");
+					sPly.AlertPermissionCooldown = 3;
+				}
+				return false;
+			}
+
+            //if (player.Group.HasPermission(requiredPermission))
+            //    return true;
+            //return false;
         }
         #endregion
 
@@ -323,7 +429,7 @@ namespace SignCommands
 
         #endregion
 
-        #region ParseSpawn
+        #region ParseSpawnMob
         private void ParseSpawnMob(IEnumerable<string> args, TSPlayer player)
         {
             //>sm "blue slime":10 zombie:100
@@ -498,6 +604,7 @@ namespace SignCommands
                     case "brain":
                     case "brain of cthulhu":
                         npc.SetDefaults(266);
+                        TSPlayer.Server.SetTime(false, 0.0);
                         TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
                         bossList.Add(npc.name + "(" + pair.Value + ")");
                         break;
@@ -511,6 +618,7 @@ namespace SignCommands
                     case "duke fishron":
                     case "fishron":
                         npc.SetDefaults(370);
+                        TSPlayer.Server.SetTime(false, 0.0);
                         TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
                         bossList.Add(npc.name + "(" + pair.Value + ")");
                         break;
@@ -536,11 +644,13 @@ namespace SignCommands
                     case "king":
                     case "king slime":
                         npc.SetDefaults(50);
+                        TSPlayer.Server.SetTime(false, 0.0);
                         TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 45, 18);
                         bossList.Add(npc.name + "(" + pair.Value + ")");
                         break;
                     case "plantera":
                         npc.SetDefaults(262);
+                        TSPlayer.Server.SetTime(false, 0.0);
                         TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
                         bossList.Add(npc.name + "(" + pair.Value + ")");
                         break;
@@ -560,7 +670,6 @@ namespace SignCommands
                         break;
                     case "skeletron":
                         npc.SetDefaults(35);
-                        TSPlayer.Server.SetTime(false, 0.0);
                         TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
                         bossList.Add(npc.name + "(" + pair.Value + ")");
                         break;

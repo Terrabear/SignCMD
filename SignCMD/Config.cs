@@ -2,7 +2,7 @@
 using System.IO;
 using Newtonsoft.Json;
 
-namespace SignCommands
+namespace SignCMD
 {
 	public class ScConfig
 	{

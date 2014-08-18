@@ -7,7 +7,7 @@ using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
 
-namespace SignCommands
+namespace SignCMD
 {
     //TODO: Add infinite signs support & Global cooldowns
     [ApiVersion(1, 16)]
@@ -20,7 +20,7 @@ namespace SignCommands
 
         public override string Author
         {
-            get { return "Scavenger + Terrabear"; }
+            get { return "SWT Team"; }
         }
 
         public override string Description
@@ -35,7 +35,7 @@ namespace SignCommands
 
         #region Read
         public static ScConfig config = new ScConfig();
-        private static readonly ScPlayer[] ScPlayers = new ScPlayer[256];
+        public static readonly ScPlayer[] ScPlayers = new ScPlayer[256];
         
         public static readonly List<Cooldown> Cooldowns = new List<Cooldown>(); 
 
@@ -114,7 +114,7 @@ namespace SignCommands
 
         #endregion
 
-        #region scPlayers
+        #region ScPlayers
 
         private static void OnJoin(JoinEventArgs args)
         {
@@ -203,7 +203,7 @@ namespace SignCommands
             if (tPly == null)
                 return false;
 
-            if (sign.noEdit && !tPly.Group.HasPermission("essentials.signs.openall"))
+            if (sign.noEdit && !tPly.Group.HasPermission("sc.open*"))
                 return true;
 
             if (ScUtils.CanCreate(tPly, sign))
