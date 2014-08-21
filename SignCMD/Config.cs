@@ -18,8 +18,8 @@ namespace SignCMD
 
         public static ScConfig Read(string path)
         {
-            return !File.Exists(path)
-                ? new ScConfig()
+            return !File.Exists(path) ? 
+                new ScConfig()
                 : JsonConvert.DeserializeObject<ScConfig>(File.ReadAllText(path));
         }
 	}

@@ -48,7 +48,7 @@ namespace SignCMD
         {
             if (player.Group.HasPermission(sign.requiredPermission))
                 return true;
-            if (!player.Group.HasPermission("essentials.signs.break"))
+            if (!player.Group.HasPermission("sc.break"))
                 return false;
             return true;
         }
@@ -151,5 +151,6 @@ namespace SignCMD
             this.group = group;
         }
     }
-}
     #endregion
+}
+    

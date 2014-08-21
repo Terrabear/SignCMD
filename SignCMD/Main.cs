@@ -20,7 +20,7 @@ namespace SignCMD
 
         public override string Author
         {
-            get { return "SWT Team"; }
+            get { return "S.W.T Team"; }
         }
 
         public override string Description
@@ -78,8 +78,8 @@ namespace SignCMD
 
         private void OnInitialize(EventArgs args)
         {
-            Commands.ChatCommands.Add(new Command("signcommands.remove", RemoveSign, "rmsign", "rms"));
-            Commands.ChatCommands.Add(new Command("signcommands.reload", SCReload, "scload", "scl"));
+            Commands.ChatCommands.Add(new Command("sc.remove", RemoveSign, "rmsign", "rms"));
+            Commands.ChatCommands.Add(new Command("sc.reload", SCReload, "scload", "scl"));
 
             var savePath = Path.Combine(TShock.SavePath, "SignCMD");
             if (!Directory.Exists(savePath))
@@ -98,7 +98,7 @@ namespace SignCMD
             var sPly = ScPlayers[args.Player.Index];
 
             sPly.DestroyMode = true;
-            args.Player.SendSuccessMessage("You can now destroy a sign.");
+            args.Player.SendSuccessMessage("You can now remove a sign.");
         }
 
         private void SCReload(CommandArgs args)
@@ -138,7 +138,7 @@ namespace SignCMD
 
         #region Timer
 
-        private void UpdateTimerOnElapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        public void UpdateTimerOnElapsed(object sender, ElapsedEventArgs elapsedEventArgs) // private -> public
         {
             foreach (var sPly in ScPlayers.Where(sPly => sPly != null))
             {
@@ -203,7 +203,7 @@ namespace SignCMD
             if (tPly == null)
                 return false;
 
-            if (sign.noEdit && !tPly.Group.HasPermission("sc.open*"))
+            if (sign.noEdit || !tPly.Group.HasPermission("sc.edit*")) // && -> ||
                 return true;
 
             if (ScUtils.CanCreate(tPly, sign))
@@ -223,10 +223,11 @@ namespace SignCMD
         private static bool OnSignHit(int x, int y, string text, int who)
         {
             if (!text.ToLower().StartsWith(config.DefineSignCommands.ToLower())) return false;
+            
             var tPly = TShock.Players[who];
-            var sPly = ScPlayers[who];
             var sign = ScSigns.Check(x, y, text, tPly);
-
+            var sPly = ScPlayers[who];
+            
             if (tPly == null || sPly == null)
                 return false;
 
@@ -279,14 +280,14 @@ namespace SignCMD
             var tPly = TShock.Players[who];
             var sign = ScSigns.Check(x, y, text, tPly);
 
-            if (tPly.Group.HasPermission("essentials.signs.openall"))
+            if (tPly.Group.HasPermission("sc.read*"))
                 return false;
 
             if (sign.noRead)
                 return true;
 
-            /*if (!sign.freeAccess)
-                return true;*/
+            //if (!sign.freeAccess)
+            //    return true;
 
             return false;
         }

@@ -111,36 +111,45 @@ namespace SignCMD
                 switch (cmdName)
 				{
 					case "no-perm":
+                    case "np":
+                    case "free":
+                    case "pub":
+                    case "public":
 					    freeAccess = true;
 						continue;
 
 					case "confirm":
+                    case "cf":
 						_confirm = true;
 						continue;
 
 					case "no-read":
+                    case "nr":
 						noRead = true;
 						continue;
 
 					case "no-edit":
+                    case "ne":
 						noEdit = true;
 						continue;
 
-					case "require-perm":
-					case "rperm":
+					case "r-perm":
+                    case "rp":
 						requiredPermission = args[1];
 						continue;
 
-					case "cd":
 					case "cooldown":
+                    case "cd":
 						ParseSignCd(args);
 						continue;
 
-					case "allowg":
+					case "aw-group":
+                    case "ag":
 						ParseGroups(args);
 						continue;
 
-					case "allowu":
+					case "aw-user":
+                    case "au":
 						ParseUsers(args);
 						continue;
 
@@ -194,7 +203,7 @@ namespace SignCMD
                 {
                     sPly.TsPlayer.SendErrorMessage("This sign is still cooling down. Please wait {0} more second{1}",
                         cooldown, cooldown.Suffix());
-                    sPly.AlertCooldownCooldown = 3;
+                    sPly.AlertCooldownCooldown = 2;
                 }
                 return;
             }
@@ -221,7 +230,7 @@ namespace SignCMD
                 if (sPly.AlertPermissionCooldown == 0)
                 {
                     sPly.TsPlayer.SendErrorMessage("Your group does not have access to this sign"); 
-                    sPly.AlertPermissionCooldown = 5;
+                    sPly.AlertPermissionCooldown = 2;
                 }
                 return;
             }
@@ -231,7 +240,7 @@ namespace SignCMD
                 if (sPly.AlertPermissionCooldown == 0)
                 {
                     sPly.TsPlayer.SendErrorMessage("You do not have access to this sign");
-                    sPly.AlertPermissionCooldown = 5;
+                    sPly.AlertPermissionCooldown = 2;
                 }
                 return;
             }
@@ -281,10 +290,8 @@ namespace SignCMD
 				//	args[args.IndexOf("{player}")] = sPly.TsPlayer.Name;
 
                 if (cmd.DoLog)
-                    TShock.Utils.SendLogs(
-                        string.Format("{0} executed: {1}{2} [Via sign command].", sPly.TsPlayer.Name, 
-                            TShock.Config.CommandSpecifier,
-                            cmdText), Color.PaleVioletRed, sPly.TsPlayer);
+                    TShock.Utils.SendLogs(string.Format("{0} executed: {1}{2} [Via sign command].", 
+                            sPly.TsPlayer.Name, TShock.Config.CommandSpecifier, cmdText), Color.PaleVioletRed, sPly.TsPlayer);
 
                 args.RemoveAt(0);
 
@@ -314,9 +321,8 @@ namespace SignCMD
 			var sPly = SignCommands.ScPlayers[player.Index];
 			if (sPly == null)
 			{ 
-				Log.ConsoleError("An error occured while executing a sign command."
-					+ "TSPlayer {0} at index {1} does not exist as an ScPlayer",
-					player.Name, player.Index);
+				Log.ConsoleError("An error occured while executing a sign command." + 
+                    "TSPlayer {0} at index {1} does not exist as an ScPlayer", player.Name, player.Index);
 				player.SendErrorMessage("An error occured. Please try again");
 				return false;
 			}
@@ -331,7 +337,7 @@ namespace SignCMD
 					if (sPly.AlertPermissionCooldown == 0)
 					{
 					    player.SendErrorMessage("You do not have the required permission to use this sign.");
-						sPly.AlertPermissionCooldown = 3;
+						sPly.AlertPermissionCooldown = 2;
 					}
 					return false;
 				}
@@ -343,7 +349,7 @@ namespace SignCMD
 				if (sPly.AlertPermissionCooldown == 0)
 				{
 				    player.SendErrorMessage("You do not have access to the commands on this sign.");
-					sPly.AlertPermissionCooldown = 3;
+					sPly.AlertPermissionCooldown = 2;
 				}
 				return false;
 			}
@@ -362,7 +368,7 @@ namespace SignCMD
             text = text.Remove(0, SignCommands.config.DefineSignCommands.Length);
 
             //Replace the Sign Command command starter with the TShock one so that it gets handled properly later
-            text = text.Replace(SignCommands.config.CommandsStartWith, TShock.Config.CommandSpecifier);
+            text = text.Replace(SignCommands.config.CommandsStartWith, TShock.Config.CommandSpecifier); // CommandStartWith = '>' -> CommandSpecifer: '/'
 
             //Remove whitespace
             text = text.Trim();
@@ -373,7 +379,7 @@ namespace SignCMD
             //Split the text string at any TShock command character
             var cmdStrings = text.Split(Convert.ToChar(TShock.Config.CommandSpecifier));
 
-            //Iterate through the strings
+            //Iterate through the strings // Iterate = 반복하다
             foreach (var str in cmdStrings)
             {
                 var sbList = new List<string>();
@@ -581,119 +587,248 @@ namespace SignCMD
         #region SpawnBoss
         private void SpawnBoss(Dictionary<string, int> bosses, ScPlayer sPly)
         {
-            int a = 50;
-            int b = 20;
+            int X = 50;
+            int Y = 20;
             var bossList = new List<string>();
             foreach (var pair in bosses)
             {
+                //TSPlayer.Server.SpawnNPC(TShock.Utils.GetNPCById(num).type, TShock.Utils.GetNPCById(num).name, count, _point.X, _point.Y, X, Y);//for reference
                 var npc = new NPC();
-                switch (pair.Key.ToLower())
-                {
-                    case "*":
-                    case "all":
-                        int[] npcIds = {4, 13, 35, 50, 125, 126, 127, 134, 222, 245, 262, 266, 370};
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        foreach (var i in npcIds)
-                        {
-                            npc.SetDefaults(i);
-                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        }
-
-                        bossList.Add("all bosses(" + pair.Value + ")");
-                        break;
-                    case "brain":
-                    case "brain of cthulhu":
-                        npc.SetDefaults(266);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "destroyer":
-                        npc.SetDefaults(134);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 60, 24);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "duke":
-                    case "duke fishron":
-                    case "fishron":
-                        npc.SetDefaults(370);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "eater":
-                    case "eater of worlds":
-                        npc.SetDefaults(13);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 55, 22);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "eye":
-                    case "eye of cthulhu":
-                        npc.SetDefaults(4);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "golem":
-                        npc.SetDefaults(245);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 45, 18);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "king":
-                    case "king slime":
-                        npc.SetDefaults(50);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 45, 18);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "plantera":
-                        npc.SetDefaults(262);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "prime":
-                    case "skeletron prime":
-                        npc.SetDefaults(127);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "queen":
-                    case "queen bee":
-                        npc.SetDefaults(222);
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "skeletron":
-                        npc.SetDefaults(35);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add(npc.name + "(" + pair.Value + ")");
-                        break;
-                    case "twins":
-                        TSPlayer.Server.SetTime(false, 0.0);
-                        npc.SetDefaults(125);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        npc.SetDefaults(126);
-                        TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, a, b);
-                        bossList.Add("the Twins " + "(" + pair.Value + ")");
-                        break;
-                    case "wof":
-                    case "wall of flesh":
-                        if (Main.wof >= 0)
-                            return;
-                        if (_point.Y/16f < Main.maxTilesY - 205)
+                    switch (pair.Key.ToLower())
+                    {
+                        case "allboss":
+                        case "all":
+                        case "*":
+                            if (Main.dayTime) {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn all bosses in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            int[] allboss = {4,13,35,50,125,126,127,134,222,245,262,266,370,315,325,327,344,345,346};
+                            foreach (var i in allboss)
+                            {
+                                npc.SetDefaults(i);
+                                //TSPlayer.Server.SetTime(false, 0.0);
+                                TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            }
+                            bossList.Add("all bosses(" + pair.Value + ")");
+                            //sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
                             break;
-                        NPC.SpawnWOF(new Vector2(_point.X, _point.Y));
-                        bossList.Add("the Wall of Flesh " +"(" + pair.Value + ")");
-                        break;
-                }
-            }
+                        case "normalboss":
+                        case "nmboss":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn normal bosses in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            int[] nmboss = {4,35,50,222,266};
+                            foreach (var i in nmboss)
+                            {
+                                npc.SetDefaults(i);
+                                //TSPlayer.Server.SetTime(false, 0.0);
+                                TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            }
+                            bossList.Add("normal bosses(" + pair.Value + ")");
+                            //sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
+                            break;
+                        case "mechaboss":
+                        case "mcboss":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn mechanical 3 heads in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            int[] mcboss = {125,126,127,134};
+                            foreach (var i in mcboss)
+                            {
+                                npc.SetDefaults(i);
+                                //TSPlayer.Server.SetTime(false, 0.0);
+                                TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            }
+                            bossList.Add("mechanical 3 heads(" + pair.Value + ")");
+                            //sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
+                            break;
+                        case "hardboss":
+                        case "hmboss":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn hard bosses in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            int[] hmboss = {125,126,127,134,245,262};
+                            foreach (var i in hmboss)
+                            {
+                                npc.SetDefaults(i);
+                                //TSPlayer.Server.SetTime(false, 0.0);
+                                TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            }
+                            bossList.Add("hardmode bosses(" + pair.Value + ")");
+                            //sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
+                            break;
+                        case "pumpboss":
+                        case "pkboss":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn pmoon bosses in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            int[] pkboss = {315,325,328};
+                            foreach (var i in pkboss)
+                            {
+                                npc.SetDefaults(i);
+                                //TSPlayer.Server.SetTime(false, 0.0);
+                                TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                                TSPlayer.Server.SpawnNPC(TShock.Utils.GetNPCById(315).type, TShock.Utils.GetNPCById(315).name, 1, _point.X, _point.Y, X, Y);//horseman
+                            }
+                            bossList.Add("pmoon bosses(" + pair.Value + ")");
+                            //sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
+                            break;
+                        case "frozboss":
+                        case "fzboss":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn fmoon bosses in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            int[] fzboss = {344,345,346};
+                            foreach (var i in fzboss)
+                            {
+                                npc.SetDefaults(i);
+                                //TSPlayer.Server.SetTime(false, 0.0);
+                                TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            }
+                            bossList.Add("fmoon bosses(" + pair.Value + ")");
+                            //sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
+                            break;
 
-            sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
+
+                        case "slime":
+                        case "king slime":
+                            npc.SetDefaults(50);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 45, 18);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        case "eye":
+                        case "eye of cthulhu":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn eye of cthulhu in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            npc.SetDefaults(4);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        case "brain":
+                        case "brain of cthulhu":
+                            npc.SetDefaults(266);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        case "eater":
+                        case "eater of worlds":
+                            npc.SetDefaults(13);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 55, 22);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        case "bee":
+                        case "queen bee":
+                            npc.SetDefaults(222);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        case "skeletron":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn skeletron in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            npc.SetDefaults(35);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        
+                        
+                        case "wof":
+                        case "wall of flesh":
+                            if (Main.wof >= 0)
+                                return;
+                            if (_point.Y / 16f < Main.maxTilesY - 205)
+                                break;
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            NPC.SpawnWOF(new Vector2(_point.X, _point.Y));
+                            bossList.Add("the Wall of Flesh(" + pair.Value + ")");
+                            break;
+
+
+                        case "destroyer":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn destroyer in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            npc.SetDefaults(134);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 60, 24);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        case "twins":
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn the twins in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            npc.SetDefaults(125);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            npc.SetDefaults(126);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add("the Twins(" + pair.Value + ")");
+                            break;
+                        case "prime":
+                        case "skeletron prime":
+                            if (Main.dayTime)
+                            {
+                                sPly.TsPlayer.SendMessage(String.Format("[Sign] You can't spawn skeletron prime in daytime!"), Color.Crimson);
+                                return;
+                            }
+                            npc.SetDefaults(127);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+
+                        
+                        case "golem":
+                            npc.SetDefaults(245);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, 45, 18);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        case "plantera":
+                            npc.SetDefaults(262);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        
+
+                        case "duke fishron":
+                        case "fishron":
+                            npc.SetDefaults(370);
+                            //TSPlayer.Server.SetTime(false, 0.0);
+                            TSPlayer.Server.SpawnNPC(npc.type, npc.name, pair.Value, _point.X, _point.Y, X, Y);
+                            bossList.Add(npc.name + "(" + pair.Value + ")");
+                            break;
+                        
+                    }
+                }
+                sPly.TsPlayer.SendMessage(String.Format("[Sign] You've spawned {0}", string.Join(", ", bossList)), Color.MediumPurple);
  
             /*TShock.Utils.SendLogs(
                           string.Format("{0} executed: {1}{2} [Via sign command].", sPly.TsPlayer.Name,
