@@ -140,7 +140,7 @@ namespace SignCMD
 
 					case "cooldown":
                     case "cd":
-						ParseSignCd(args);
+						ParseSignCd(args, ply);
 						continue;
 
 					case "aw-group":
@@ -199,9 +199,9 @@ namespace SignCMD
 
             if (cooldown > 0)
             {
-                if (sPly.AlertCooldownCooldown == 0)
+                if (sPly.AlertCooldownCooldown == 0) //&& !sPly.TsPlayer.Group.HasPermission("sc.alpass"))
                 {
-                    sPly.TsPlayer.SendErrorMessage("This sign is still cooling down. Please wait {0} more second{1}",
+                    sPly.TsPlayer.SendWarningMessage("[Sign] Still cooling down! {0} more second{1} left.",
                         cooldown, cooldown.Suffix());
                     sPly.AlertCooldownCooldown = 2;
                 }
@@ -229,7 +229,7 @@ namespace SignCMD
             {
                 if (sPly.AlertPermissionCooldown == 0)
                 {
-                    sPly.TsPlayer.SendErrorMessage("Your group does not have access to this sign"); 
+                    sPly.TsPlayer.SendErrorMessage("Your group does not have access to this sign."); 
                     sPly.AlertPermissionCooldown = 2;
                 }
                 return;
@@ -239,7 +239,7 @@ namespace SignCMD
             {
                 if (sPly.AlertPermissionCooldown == 0)
                 {
-                    sPly.TsPlayer.SendErrorMessage("You do not have access to this sign");
+                    sPly.TsPlayer.SendErrorMessage("You do not have access to this sign.");
                     sPly.AlertPermissionCooldown = 2;
                 }
                 return;
@@ -290,7 +290,7 @@ namespace SignCMD
 				//	args[args.IndexOf("{player}")] = sPly.TsPlayer.Name;
 
                 if (cmd.DoLog)
-                    TShock.Utils.SendLogs(string.Format("{0} executed: {1}{2} [Via sign command].", 
+                    TShock.Utils.SendLogs(string.Format("{0} executed: {1}{2} [Via sign command].",
                             sPly.TsPlayer.Name, TShock.Config.CommandSpecifier, cmdText), Color.PaleVioletRed, sPly.TsPlayer);
 
                 args.RemoveAt(0);
@@ -299,7 +299,7 @@ namespace SignCMD
             }
 
             cooldown = _cooldown;
-            sPly.AlertCooldownCooldown = 1;
+            sPly.AlertCooldownCooldown = 2;
             sPly.confirmSign = null;
         }
 
@@ -492,7 +492,7 @@ namespace SignCMD
             int cd;
             if (args.Count < 3)
             {
-                //args[0] is command name
+                //args[0] is command name //(cd)
                 if (!int.TryParse(args[1], out cd))
                 {
                     if (SignCommands.config.CooldownGroups.ContainsKey(args[1]))
@@ -519,6 +519,66 @@ namespace SignCMD
                     _cooldown = cd;
                 }
             }
+        }
+
+        private void ParseSignCd(IList<string> args, TSPlayer player)
+        {
+            int cd;
+            if (args.Count < 3)
+            {
+                //if(!player.Group.HasPermission("sc.cdpass"))
+                //{
+
+                //args[0] is command name //(cd)
+                    if (!int.TryParse(args[1], out cd))
+                    {
+                        if (SignCommands.config.CooldownGroups.ContainsKey(args[1]))
+                        {
+                            cd = SignCommands.config.CooldownGroups[args[1]];
+                            _cooldownGroup = args[1];
+                        }
+                    }
+                    _cooldown = cd;
+                //}
+                //else if (player.Group.HasPermission("sc.cdpass"))
+                //{
+                //    cd = 0;
+                //}
+            }
+            else
+            {
+                //args[0] is command name. args[1] is cooldown specifier. args[2] is cooldown
+                if (string.Equals(args[1], "global", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    if (!int.TryParse(args[2], out cd))
+                    {
+                        if (SignCommands.config.CooldownGroups.ContainsKey(args[2]))
+                        {
+                            cd = SignCommands.config.CooldownGroups[args[2]];
+                            _cooldownGroup = args[2];
+                        }
+                    }
+                    _cooldown = cd;
+                }
+            }
+        }
+
+        private void SignCd(IList<string> args, ScPlayer player)
+        {
+            int cd;
+            if (!int.TryParse(args[1], out cd))
+            {
+                if (!player.TsPlayer.Group.HasPermission("sc.cdpass"))
+                {
+                    if (SignCommands.config.CooldownGroups.ContainsKey(args[1]))
+                    {
+                        cd = SignCommands.config.CooldownGroups[args[1]];
+                        _cooldownGroup = args[1];
+                    }
+                }
+                else cd = 0;
+            }
+            _cooldown = cd;
         }
         #endregion
 
